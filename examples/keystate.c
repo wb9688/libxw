@@ -35,11 +35,14 @@ static void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window = gtk_application_window_new(app);
     gtk_window_set_title(GTK_WINDOW(window), "libxw keystate example");
 
-    label = gtk_label_new("");
+    label = gtk_label_new("Waiting for keystate…");
     gtk_container_add(GTK_CONTAINER(window), label);
 
-    XwKeystateState *state = xw_keystate_get_state(xw_keystate);
-    state_changed_event(xw_keystate, state);
+    if (xw_keystate) {
+        XwKeystateState *state = xw_keystate_get_state(xw_keystate);
+        state_changed_event(xw_keystate, state);
+    } else
+        gtk_label_set_label(GTK_LABEL(label), "keystate is not supported in your environment");
 
     gtk_widget_show_all(window);
 }

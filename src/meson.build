@@ -9,7 +9,6 @@ libxw = shared_library(
 
     dependencies: [
         dependency('glib-2.0'),
-        dependency('gdk-pixbuf-2.0'),
         dependency('gdk-x11-3.0'),
         dependency('gdk-wayland-3.0'),
         dependency('x11'),

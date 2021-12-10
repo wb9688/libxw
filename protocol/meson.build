@@ -26,7 +26,9 @@ endforeach
 
 lib_client_protos = static_library(
     'client_protos',
+
     client_protos_src + client_protos_headers,
+
     dependencies: [wayland_client]
 )
 
