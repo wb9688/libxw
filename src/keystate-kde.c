@@ -1,0 +1,114 @@
+/*
+ *    libxw
+ *    Copyright (C) 2021  wb9688
+ *
+ *    This library is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 2.1 of the License, or (at your option) any later version.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+#include <gdk/gdkwayland.h>
+
+#include <wayland-client-protocol.h>
+#include "keystate-client-protocol.h"
+
+#include "keystate-kde.h"
+
+struct _XwKeystateKde {
+    GObject parent_instance;
+    struct org_kde_kwin_keystate *keystate_interface;
+    XwKeystateState *state;
+};
+
+static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface);
+static void xw_keystate_kde_finalize(GObject *gobject);
+
+G_DEFINE_TYPE_WITH_CODE(XwKeystateKde, xw_keystate_kde, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_KEYSTATE, xw_keystate_kde_keystate_interface_init))
+
+static void xw_keystate_kde_class_init(XwKeystateKdeClass *klass) {
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+    object_class->finalize = xw_keystate_kde_finalize;
+}
+
+static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface) {
+  iface->get_state = xw_keystate_kde_get_state;
+}
+
+static void handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
+    XwKeystateKde *self = XW_KEYSTATE_KDE(data);
+
+    if (strcmp(interface, org_kde_kwin_keystate_interface.name) == 0)
+        self->keystate_interface = wl_registry_bind(registry, name, &org_kde_kwin_keystate_interface, 3);
+}
+
+static void handle_global_remove(void *data, struct wl_registry *registry, uint32_t name) {}
+
+static const struct wl_registry_listener registry_listener = {
+    .global = handle_global,
+    .global_remove = handle_global_remove
+};
+
+static void state_changed(void *data, struct org_kde_kwin_keystate *org_kde_kwin_keystate, uint32_t key, uint32_t state) {
+    XwKeystateKde *self = XW_KEYSTATE_KDE(data);
+
+    if (key == 0)
+        self->state->capslock = state;
+    else if (key == 1)
+        self->state->numlock = state;
+    else if (key == 2)
+        self->state->scrolllock = state;
+
+    g_signal_emit_by_name(self, "state-changed", self->state);
+}
+
+static const struct org_kde_kwin_keystate_listener state_changed_listener = {
+    .stateChanged = state_changed
+};
+
+static void xw_keystate_kde_init(XwKeystateKde *self) {
+    GdkDisplay *gdk_display = gdk_display_get_default();
+    struct wl_display *display = gdk_wayland_display_get_wl_display(GDK_WAYLAND_DISPLAY(gdk_display));
+
+    struct wl_registry *registry = wl_display_get_registry(display);
+    wl_registry_add_listener(registry, &registry_listener, self);
+    wl_display_roundtrip(display);
+
+    self->state = g_slice_new(XwKeystateState);
+    self->state->capslock = XW_KEYSTATE_STATE_UNLOCKED;
+    self->state->numlock = XW_KEYSTATE_STATE_UNLOCKED;
+    self->state->scrolllock = XW_KEYSTATE_STATE_UNLOCKED;
+
+    org_kde_kwin_keystate_add_listener(self->keystate_interface, &state_changed_listener, self);
+    org_kde_kwin_keystate_fetchStates(self->keystate_interface);
+}
+
+static void xw_keystate_kde_finalize(GObject *gobject) {
+    XwKeystateKde *self = XW_KEYSTATE_KDE(gobject);
+
+    org_kde_kwin_keystate_destroy(self->keystate_interface);
+
+    g_slice_free(XwKeystateState, self->state);
+
+    G_OBJECT_CLASS(xw_keystate_kde_parent_class)->finalize(gobject);
+}
+
+XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self) {
+    return XW_KEYSTATE_KDE(self)->state;
+}
+
+gboolean xw_keystate_kde_is_supported() {
+    GdkDisplay *display = gdk_display_get_default();
+
+    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), org_kde_kwin_keystate_interface.name);
+}
