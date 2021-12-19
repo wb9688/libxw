@@ -26,12 +26,14 @@
 
 struct _XwKeystateKde {
     GObject parent_instance;
+
     struct org_kde_kwin_keystate *keystate_interface;
     XwKeystateState *state;
 };
 
 static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface);
 static void xw_keystate_kde_finalize(GObject *gobject);
+static XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwKeystateKde, xw_keystate_kde, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_KEYSTATE, xw_keystate_kde_keystate_interface_init))
 
@@ -42,7 +44,7 @@ static void xw_keystate_kde_class_init(XwKeystateKdeClass *klass) {
 }
 
 static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface) {
-  iface->get_state = xw_keystate_kde_get_state;
+    iface->get_state = xw_keystate_kde_get_state;
 }
 
 static void handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
@@ -103,7 +105,7 @@ static void xw_keystate_kde_finalize(GObject *gobject) {
     G_OBJECT_CLASS(xw_keystate_kde_parent_class)->finalize(gobject);
 }
 
-XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self) {
+static XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self) {
     return XW_KEYSTATE_KDE(self)->state;
 }
 

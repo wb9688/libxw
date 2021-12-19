@@ -20,16 +20,12 @@
 #ifndef __KEYSTATE_X11_H__
 #define __KEYSTATE_X11_H__
 
-#include <glib-2.0/glib.h>
-
 #include "keystate.h"
 
 G_BEGIN_DECLS
 
 #define XW_TYPE_KEYSTATE_X11 xw_keystate_x11_get_type()
 G_DECLARE_FINAL_TYPE(XwKeystateX11, xw_keystate_x11, XW, KEYSTATE_X11, GObject)
-
-XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self);
 
 gboolean xw_keystate_x11_is_supported();
 

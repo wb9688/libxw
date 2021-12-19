@@ -20,16 +20,12 @@
 #ifndef __KEYSTATE_KDE_H__
 #define __KEYSTATE_KDE_H__
 
-#include <glib-2.0/glib.h>
-
 #include "keystate.h"
 
 G_BEGIN_DECLS
 
 #define XW_TYPE_KEYSTATE_KDE xw_keystate_kde_get_type()
 G_DECLARE_FINAL_TYPE(XwKeystateKde, xw_keystate_kde, XW, KEYSTATE_KDE, GObject)
-
-XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self);
 
 gboolean xw_keystate_kde_is_supported();
 

@@ -25,12 +25,14 @@
 
 struct _XwKeystateX11 {
     GObject parent_instance;
+
     gint xkb_event_base;
     XwKeystateState *state;
 };
 
 static void xw_keystate_x11_keystate_interface_init(XwKeystateInterface *iface);
 static void xw_keystate_x11_finalize(GObject *gobject);
+static XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwKeystateX11, xw_keystate_x11, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_KEYSTATE, xw_keystate_x11_keystate_interface_init))
 
@@ -100,7 +102,7 @@ static void xw_keystate_x11_finalize(GObject *gobject) {
     G_OBJECT_CLASS(xw_keystate_x11_parent_class)->finalize(gobject);
 }
 
-XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self) {
+static XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self) {
     return XW_KEYSTATE_X11(self)->state;
 }
 
