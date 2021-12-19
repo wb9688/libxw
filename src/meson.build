@@ -1,14 +1,20 @@
+cc = meson.get_compiler('c')
+
 libxw = shared_library(
     'xw',
 
     sources: [
         'keystate.c',
         'keystate-kde.c',
-        'keystate-x11.c'
+        'keystate-x11.c',
+        'screenshot.c',
+        'screenshot-wlroots.c'
     ],
 
     dependencies: [
+        cc.find_library('rt'),
         dependency('glib-2.0'),
+        dependency('gdk-pixbuf-2.0'),
         dependency('gdk-x11-3.0'),
         dependency('gdk-wayland-3.0'),
         dependency('x11'),

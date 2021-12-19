@@ -1,10 +1,14 @@
-executable(
-    'keystate',
+examples = ['keystate', 'screenshot']
 
-    sources: ['keystate.c'],
+foreach example : examples
+    executable(
+        example,
 
-    dependencies: [
-        xw,
-        dependency('gtk+-3.0')
-    ]
-)
+        sources: [example + '.c'],
+
+        dependencies: [
+            xw,
+            dependency('gtk+-3.0')
+        ]
+    )
+endforeach

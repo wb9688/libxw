@@ -13,15 +13,16 @@ wayland_scanner_client = generator(
 )
 
 client_protocols = [
-    'keystate.xml'
+    'keystate.xml',
+    'wlr-screencopy-unstable-v1.xml'
 ]
 
 client_protos_src = []
 client_protos_headers = []
 
-foreach p : client_protocols
-    client_protos_src += wayland_scanner_code.process(p)
-    client_protos_headers += wayland_scanner_client.process(p)
+foreach client_protocol : client_protocols
+    client_protos_src += wayland_scanner_code.process(client_protocol)
+    client_protos_headers += wayland_scanner_client.process(client_protocol)
 endforeach
 
 lib_client_protos = static_library(
