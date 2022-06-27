@@ -14,6 +14,7 @@ wayland_scanner_client = generator(
 
 client_protocols = [
     'keystate.xml',
+    'wlr-output-management-unstable-v1.xml',
     'wlr-screencopy-unstable-v1.xml'
 ]
 

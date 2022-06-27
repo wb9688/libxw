@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     xw_keystate = xw_keystate_new();
     if (xw_keystate)
-        g_signal_connect(xw_keystate, "state-changed", (GCallback) state_changed_event, NULL);
+        g_signal_connect(xw_keystate, "state-changed", G_CALLBACK(state_changed_event), NULL);
 
     GtkApplication *app = gtk_application_new("org.libxw.examples.keystate", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);

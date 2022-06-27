@@ -1,4 +1,4 @@
-examples = ['keystate', 'screenshot']
+examples = ['keystate', 'outputs', 'screenshot']
 
 foreach example : examples
     executable(

@@ -7,6 +7,10 @@ libxw = shared_library(
         'keystate.c',
         'keystate-kde.c',
         'keystate-x11.c',
+        'output.c',
+        'output-wlroots.c',
+        'outputs.c',
+        'outputs-wlroots.c',
         'screenshot.c',
         'screenshot-wlroots.c'
     ],
