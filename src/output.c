@@ -34,3 +34,11 @@ static void xw_output_default_init(XwOutputInterface *iface) {
 
     output_signals[DESTROY] = g_signal_new("destroy", G_TYPE_FROM_INTERFACE(iface), G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET(XwOutputInterface, destroy), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
+
+gchar *xw_output_get_name(XwOutput *self) {
+    g_return_if_fail(XW_IS_OUTPUT(self));
+
+    XwOutputInterface *iface = XW_OUTPUT_GET_IFACE(self);
+    g_return_if_fail(iface->get_name != NULL);
+    iface->get_name(self);
+}

@@ -77,17 +77,11 @@ static void output_manager_handle_head(void *data, struct zwlr_output_manager_v1
     g_signal_emit_by_name(self, "new-output", XW_OUTPUT(xw_output));
 
     g_signal_connect(xw_output, "destroy", G_CALLBACK(destroy_event), self);
-
-    //g_critical("head");
 }
 
-static void output_manager_handle_done(void *data, struct zwlr_output_manager_v1 *output_manager, uint32_t serial) {
-    //g_critical("done");
-}
+static void output_manager_handle_done(void *data, struct zwlr_output_manager_v1 *output_manager, uint32_t serial) {}
 
-static void output_manager_handle_finished(void *data, struct zwlr_output_manager_v1 *output_manager) {
-    //g_critical("finished");
-}
+static void output_manager_handle_finished(void *data, struct zwlr_output_manager_v1 *output_manager) {}
 
 static const struct zwlr_output_manager_v1_listener output_manager_listener = {
     .head = output_manager_handle_head,

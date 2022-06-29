@@ -75,6 +75,7 @@ static void xw_output_wlroots_get_property(GObject *object, guint property_id, G
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface);
 static void xw_output_wlroots_constructed(GObject *gobject);
 static void xw_output_wlroots_finalize(GObject *gobject);
+static gchar *xw_output_wlroots_get_name(XwOutput *output);
 
 G_DEFINE_TYPE_WITH_CODE(XwOutputWlroots, xw_output_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_OUTPUT, xw_output_wlroots_output_interface_init))
 
@@ -95,6 +96,7 @@ static void xw_output_wlroots_class_init(XwOutputWlrootsClass *klass) {
 }
 
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface) {
+    iface->get_name = xw_output_wlroots_get_name;
 }
 
 static void output_mode_handle_size(void *data, struct zwlr_output_mode_v1 *output_mode, int32_t width, int32_t height) {}
@@ -124,8 +126,6 @@ static void output_head_handle_name(void *data, struct zwlr_output_head_v1 *outp
     g_value_set_static_string(&val, name);
 
     g_object_set_property(G_OBJECT(data), "name", &val);
-
-    //g_critical("name: %s", name);
 }
 
 static void output_head_handle_description(void *data, struct zwlr_output_head_v1 *output_head, const char *description) {}
@@ -195,9 +195,11 @@ static void xw_output_wlroots_finalize(GObject *gobject) {
     g_list_free_full(self->modes, (GDestroyNotify) zwlr_output_mode_v1_destroy);
     zwlr_output_head_v1_destroy(self->head);
 
-    //g_critical("xw_output_wlroots_finalize");
-
     G_OBJECT_CLASS(xw_output_wlroots_parent_class)->finalize(gobject);
+}
+
+gchar *xw_output_wlroots_get_name(XwOutput *self) {
+    return XW_OUTPUT_WLROOTS(self)->name;
 }
 
 gboolean xw_output_wlroots_is_supported() {

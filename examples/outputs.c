@@ -37,10 +37,7 @@ static void destroy_event(XwOutput *output, GtkWidget *label) {
 }
 
 static void new_output_event(XwOutputs *xw_outputs, XwOutput *output) {
-    GValue val = G_VALUE_INIT;
-    g_object_get_property(G_OBJECT(output), "name", &val);
-
-    GtkWidget *label = gtk_label_new(g_value_get_string(&val));
+    GtkWidget *label = gtk_label_new(xw_output_get_name(output));
     gtk_container_add(GTK_CONTAINER(box), label);
     gtk_widget_show(label);
 
@@ -64,10 +61,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
         for (GList *output = outputs; output; output = output->next) {
             XwOutput *data = output->data;
 
-            GValue val = G_VALUE_INIT;
-            g_object_get_property(G_OBJECT(data), "name", &val);
-
-            GtkWidget *label = gtk_label_new(g_value_get_string(&val));
+            GtkWidget *label = gtk_label_new(xw_output_get_name(data));
             gtk_container_add(GTK_CONTAINER(box), label);
 
             g_signal_connect(data, "notify::name", G_CALLBACK(notify_name_event), label);

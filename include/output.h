@@ -32,7 +32,11 @@ struct _XwOutputInterface {
     GTypeInterface parent;
 
     void (*destroy)(XwOutput *self);
+
+    gchar *(*get_name)(XwOutput *self);
 };
+
+gchar *xw_output_get_name(XwOutput *self);
 
 G_END_DECLS
 
