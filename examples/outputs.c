@@ -25,9 +25,9 @@
 XwOutputs *xw_outputs;
 GtkWidget *box;
 
-static void notify_name_event(XwOutput *output, GParamSpec *pspec, GtkLabel *label) {
+static void notify_description_event(XwOutput *output, GParamSpec *pspec, GtkLabel *label) {
     GValue val = G_VALUE_INIT;
-    g_object_get_property(G_OBJECT(output), "name", &val);
+    g_object_get_property(G_OBJECT(output), "description", &val);
 
     gtk_label_set_text(label, g_value_get_string(&val));
 }
@@ -48,14 +48,14 @@ static void new_output_event(XwOutputs *xw_outputs, XwOutput *output) {
     g_signal_connect(check_button, "toggled", G_CALLBACK(toggled_event), output);
     gtk_container_add(GTK_CONTAINER(hbox), check_button);
 
-    GtkWidget *label = gtk_label_new(xw_output_get_name(output));
+    GtkWidget *label = gtk_label_new(xw_output_get_description(output));
     gtk_container_add(GTK_CONTAINER(hbox), label);
 
     gtk_container_add(GTK_CONTAINER(box), hbox);
 
     gtk_widget_show_all(hbox);
 
-    g_signal_connect(output, "notify::name", G_CALLBACK(notify_name_event), label);
+    g_signal_connect(output, "notify::description", G_CALLBACK(notify_description_event), label);
 
     g_signal_connect(output, "destroy", G_CALLBACK(destroy_event), label);
 }
@@ -82,12 +82,12 @@ static void activate(GtkApplication *app, gpointer user_data) {
             g_signal_connect(check_button, "toggled", G_CALLBACK(toggled_event), data);
             gtk_container_add(GTK_CONTAINER(hbox), check_button);
 
-            GtkWidget *label = gtk_label_new(xw_output_get_name(data));
+            GtkWidget *label = gtk_label_new(xw_output_get_description(data));
             gtk_container_add(GTK_CONTAINER(hbox), label);
 
             gtk_container_add(GTK_CONTAINER(box), hbox);
 
-            g_signal_connect(data, "notify::name", G_CALLBACK(notify_name_event), label);
+            g_signal_connect(data, "notify::description", G_CALLBACK(notify_description_event), label);
 
             g_signal_connect(data, "destroy", G_CALLBACK(destroy_event), label);
         }

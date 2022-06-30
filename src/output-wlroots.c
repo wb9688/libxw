@@ -29,16 +29,19 @@ struct _XwOutputWlroots {
 
     GList *modes;
 
-    gboolean enabled;
     gchar *name;
+    gchar *description;
+
+    gboolean enabled;
 };
 
 typedef enum {
     PROP_OUTPUTS = 1,
     PROP_HEAD,
     N_PROPERTIES,
-    PROP_ENABLED,
-    PROP_NAME
+    PROP_NAME,
+    PROP_DESCRIPTION,
+    PROP_ENABLED
 } XwOutputWlrootsProperty;
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
@@ -53,12 +56,16 @@ static void xw_output_wlroots_set_property(GObject *object, guint property_id, c
         case PROP_HEAD:
             self->head = g_value_get_pointer(value);
             break;
-        case PROP_ENABLED:
-            self->enabled = g_value_get_boolean(value);
-            break;
         case PROP_NAME:
             g_free(self->name);
             self->name = g_value_dup_string(value);
+            break;
+        case PROP_DESCRIPTION:
+            g_free(self->description);
+            self->description = g_value_dup_string(value);
+            break;
+        case PROP_ENABLED:
+            self->enabled = g_value_get_boolean(value);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -76,11 +83,14 @@ static void xw_output_wlroots_get_property(GObject *object, guint property_id, G
         case PROP_HEAD:
             g_value_set_pointer(value, self->head);
             break;
-        case PROP_ENABLED:
-            g_value_set_boolean(value, self->enabled);
-            break;
         case PROP_NAME:
             g_value_set_static_string(value, self->name);
+            break;
+        case PROP_DESCRIPTION:
+            g_value_set_static_string(value, self->description);
+            break;
+        case PROP_ENABLED:
+            g_value_set_boolean(value, self->enabled);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -91,9 +101,12 @@ static void xw_output_wlroots_get_property(GObject *object, guint property_id, G
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface);
 static void xw_output_wlroots_constructed(GObject *gobject);
 static void xw_output_wlroots_finalize(GObject *gobject);
+
+static gchar *xw_output_wlroots_get_name(XwOutput *output);
+static gchar *xw_output_wlroots_get_description(XwOutput *output);
+
 static gboolean xw_output_wlroots_get_enabled(XwOutput *output);
 static void xw_output_wlroots_set_enabled(XwOutput *output, gboolean enabled);
-static gchar *xw_output_wlroots_get_name(XwOutput *output);
 
 G_DEFINE_TYPE_WITH_CODE(XwOutputWlroots, xw_output_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_OUTPUT, xw_output_wlroots_output_interface_init))
 
@@ -108,17 +121,20 @@ static void xw_output_wlroots_class_init(XwOutputWlrootsClass *klass) {
 
     g_object_class_install_properties(object_class, N_PROPERTIES, obj_properties);
 
-    g_object_class_override_property(object_class, PROP_ENABLED, "enabled");
     g_object_class_override_property(object_class, PROP_NAME, "name");
+    g_object_class_override_property(object_class, PROP_DESCRIPTION, "description");
+
+    g_object_class_override_property(object_class, PROP_ENABLED, "enabled");
 
     object_class->constructed = xw_output_wlroots_constructed;
     object_class->finalize = xw_output_wlroots_finalize;
 }
 
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface) {
+    iface->get_name = xw_output_wlroots_get_name;
+    iface->get_description = xw_output_wlroots_get_description;
     iface->get_enabled = xw_output_wlroots_get_enabled;
     iface->set_enabled = xw_output_wlroots_set_enabled;
-    iface->get_name = xw_output_wlroots_get_name;
 }
 
 static void output_mode_handle_size(void *data, struct zwlr_output_mode_v1 *output_mode, int32_t width, int32_t height) {}
@@ -150,7 +166,13 @@ static void output_head_handle_name(void *data, struct zwlr_output_head_v1 *outp
     g_object_set_property(G_OBJECT(data), "name", &val);
 }
 
-static void output_head_handle_description(void *data, struct zwlr_output_head_v1 *output_head, const char *description) {}
+static void output_head_handle_description(void *data, struct zwlr_output_head_v1 *output_head, const char *description) {
+    GValue val = G_VALUE_INIT;
+    g_value_init(&val, G_TYPE_STRING);
+    g_value_set_static_string(&val, description);
+
+    g_object_set_property(G_OBJECT(data), "description", &val);
+}
 
 static void output_head_handle_physical_size(void *data, struct zwlr_output_head_v1 *output_head, int32_t width, int32_t height) {}
 
@@ -225,6 +247,14 @@ static void xw_output_wlroots_finalize(GObject *gobject) {
     G_OBJECT_CLASS(xw_output_wlroots_parent_class)->finalize(gobject);
 }
 
+static gchar *xw_output_wlroots_get_name(XwOutput *self) {
+    return XW_OUTPUT_WLROOTS(self)->name;
+}
+
+static gchar *xw_output_wlroots_get_description(XwOutput *self) {
+    return XW_OUTPUT_WLROOTS(self)->description;
+}
+
 static gboolean xw_output_wlroots_get_enabled(XwOutput *self) {
     return XW_OUTPUT_WLROOTS(self)->enabled;
 }
@@ -232,10 +262,6 @@ static gboolean xw_output_wlroots_get_enabled(XwOutput *self) {
 static void xw_output_wlroots_set_enabled(XwOutput *self, gboolean enabled) {
     XwOutputWlroots *output = XW_OUTPUT_WLROOTS(self);
     xw_outputs_wlroots_apply_changes(output->outputs, output->head, enabled);
-}
-
-static gchar *xw_output_wlroots_get_name(XwOutput *self) {
-    return XW_OUTPUT_WLROOTS(self)->name;
 }
 
 gboolean xw_output_wlroots_is_supported() {

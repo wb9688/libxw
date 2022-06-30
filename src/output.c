@@ -30,10 +30,28 @@ enum {
 static guint output_signals[N_SIGNALS];
 
 static void xw_output_default_init(XwOutputInterface *iface) {
-    g_object_interface_install_property(iface, g_param_spec_boolean("enabled", "Enabled", "Enabled", TRUE, G_PARAM_READWRITE));
     g_object_interface_install_property(iface, g_param_spec_string("name", "Name", "Name", "", G_PARAM_READWRITE));
+    g_object_interface_install_property(iface, g_param_spec_string("description", "Description", "Description", "", G_PARAM_READWRITE));
+
+    g_object_interface_install_property(iface, g_param_spec_boolean("enabled", "Enabled", "Enabled", TRUE, G_PARAM_READWRITE));
 
     output_signals[DESTROY] = g_signal_new("destroy", G_TYPE_FROM_INTERFACE(iface), G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET(XwOutputInterface, destroy), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+}
+
+gchar *xw_output_get_name(XwOutput *self) {
+    g_return_if_fail(XW_IS_OUTPUT(self));
+
+    XwOutputInterface *iface = XW_OUTPUT_GET_IFACE(self);
+    g_return_if_fail(iface->get_name != NULL);
+    return iface->get_name(self);
+}
+
+gchar *xw_output_get_description(XwOutput *self) {
+    g_return_if_fail(XW_IS_OUTPUT(self));
+
+    XwOutputInterface *iface = XW_OUTPUT_GET_IFACE(self);
+    g_return_if_fail(iface->get_description != NULL);
+    return iface->get_description(self);
 }
 
 gboolean xw_output_get_enabled(XwOutput *self) {
@@ -50,12 +68,4 @@ void xw_output_set_enabled(XwOutput *self, gboolean enabled) {
     XwOutputInterface *iface = XW_OUTPUT_GET_IFACE(self);
     g_return_if_fail(iface->set_enabled != NULL);
     iface->set_enabled(self, enabled);
-}
-
-gchar *xw_output_get_name(XwOutput *self) {
-    g_return_if_fail(XW_IS_OUTPUT(self));
-
-    XwOutputInterface *iface = XW_OUTPUT_GET_IFACE(self);
-    g_return_if_fail(iface->get_name != NULL);
-    return iface->get_name(self);
 }
