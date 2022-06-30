@@ -27,12 +27,12 @@ struct _XwKeystateX11 {
     GObject parent_instance;
 
     gint xkb_event_base;
-    XwKeystateState *state;
+    XwKeystateStates *states;
 };
 
 static void xw_keystate_x11_keystate_interface_init(XwKeystateInterface *iface);
 static void xw_keystate_x11_finalize(GObject *gobject);
-static XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self);
+static XwKeystateStates *xw_keystate_x11_get_states(XwKeystate *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwKeystateX11, xw_keystate_x11, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_KEYSTATE, xw_keystate_x11_keystate_interface_init))
 
@@ -43,7 +43,7 @@ static void xw_keystate_x11_class_init(XwKeystateX11Class *klass) {
 }
 
 static void xw_keystate_x11_keystate_interface_init(XwKeystateInterface *iface) {
-    iface->get_state = xw_keystate_x11_get_state;
+    iface->get_states = xw_keystate_x11_get_states;
 }
 
 static void xw_keystate_x11_update_state(XwKeystateX11 *self, guint state) {
@@ -51,11 +51,11 @@ static void xw_keystate_x11_update_state(XwKeystateX11 *self, guint state) {
     gint is_lit1 = state & (1 << 1);
     gint is_lit2 = state & (1 << 2);
 
-    self->state->capslock = is_lit0 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
-    self->state->numlock = is_lit1 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
-    self->state->scrolllock = is_lit2 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
+    self->states->capslock = is_lit0 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
+    self->states->numlock = is_lit1 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
+    self->states->scrolllock = is_lit2 ? XW_KEYSTATE_STATE_LOCKED : XW_KEYSTATE_STATE_UNLOCKED;
 
-    g_signal_emit_by_name(self, "state-changed", self->state);
+    g_signal_emit_by_name(self, "states-changed", self->states);
 }
 
 static GdkFilterReturn xw_keystate_x11_event_filter(GdkXEvent *xevent, GdkEvent *event, XwKeystateX11 *self) {
@@ -83,7 +83,7 @@ static void xw_keystate_x11_init(XwKeystateX11 *self) {
     if (!XkbQueryExtension(xdisplay, &opcode, &self->xkb_event_base, &xkb_error_base, &maj, &min))
         g_error("XkbQueryExtension failed");
 
-    self->state = g_slice_new(XwKeystateState);
+    self->states = g_slice_new(XwKeystateStates);
 
     gdk_window_add_filter(NULL, (GdkFilterFunc) xw_keystate_x11_event_filter, self);
     if (!XkbSelectEvents(xdisplay, XkbUseCoreKbd, XkbIndicatorStateNotifyMask, XkbIndicatorStateNotifyMask))
@@ -97,13 +97,13 @@ static void xw_keystate_x11_init(XwKeystateX11 *self) {
 static void xw_keystate_x11_finalize(GObject *gobject) {
     XwKeystateX11 *self = XW_KEYSTATE_X11(gobject);
 
-    g_slice_free(XwKeystateState, self->state);
+    g_slice_free(XwKeystateStates, self->states);
 
     G_OBJECT_CLASS(xw_keystate_x11_parent_class)->finalize(gobject);
 }
 
-static XwKeystateState *xw_keystate_x11_get_state(XwKeystate *self) {
-    return XW_KEYSTATE_X11(self)->state;
+static XwKeystateStates *xw_keystate_x11_get_states(XwKeystate *self) {
+    return XW_KEYSTATE_X11(self)->states;
 }
 
 gboolean xw_keystate_x11_is_supported() {

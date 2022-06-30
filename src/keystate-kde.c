@@ -28,12 +28,12 @@ struct _XwKeystateKde {
     GObject parent_instance;
 
     struct org_kde_kwin_keystate *keystate_interface;
-    XwKeystateState *state;
+    XwKeystateStates *states;
 };
 
 static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface);
 static void xw_keystate_kde_finalize(GObject *gobject);
-static XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self);
+static XwKeystateStates *xw_keystate_kde_get_states(XwKeystate *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwKeystateKde, xw_keystate_kde, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_KEYSTATE, xw_keystate_kde_keystate_interface_init))
 
@@ -44,7 +44,7 @@ static void xw_keystate_kde_class_init(XwKeystateKdeClass *klass) {
 }
 
 static void xw_keystate_kde_keystate_interface_init(XwKeystateInterface *iface) {
-    iface->get_state = xw_keystate_kde_get_state;
+    iface->get_states = xw_keystate_kde_get_states;
 }
 
 static void handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version) {
@@ -65,13 +65,13 @@ static void state_changed(void *data, struct org_kde_kwin_keystate *org_kde_kwin
     XwKeystateKde *self = XW_KEYSTATE_KDE(data);
 
     if (key == 0)
-        self->state->capslock = state;
+        self->states->capslock = state;
     else if (key == 1)
-        self->state->numlock = state;
+        self->states->numlock = state;
     else if (key == 2)
-        self->state->scrolllock = state;
+        self->states->scrolllock = state;
 
-    g_signal_emit_by_name(self, "state-changed", self->state);
+    g_signal_emit_by_name(self, "states-changed", self->states);
 }
 
 static const struct org_kde_kwin_keystate_listener state_changed_listener = {
@@ -86,10 +86,10 @@ static void xw_keystate_kde_init(XwKeystateKde *self) {
     wl_registry_add_listener(registry, &registry_listener, self);
     wl_display_roundtrip(display);
 
-    self->state = g_slice_new(XwKeystateState);
-    self->state->capslock = XW_KEYSTATE_STATE_UNLOCKED;
-    self->state->numlock = XW_KEYSTATE_STATE_UNLOCKED;
-    self->state->scrolllock = XW_KEYSTATE_STATE_UNLOCKED;
+    self->states = g_slice_new(XwKeystateStates);
+    self->states->capslock = XW_KEYSTATE_STATE_UNLOCKED;
+    self->states->numlock = XW_KEYSTATE_STATE_UNLOCKED;
+    self->states->scrolllock = XW_KEYSTATE_STATE_UNLOCKED;
 
     org_kde_kwin_keystate_add_listener(self->keystate_interface, &state_changed_listener, self);
     org_kde_kwin_keystate_fetchStates(self->keystate_interface);
@@ -100,13 +100,13 @@ static void xw_keystate_kde_finalize(GObject *gobject) {
 
     org_kde_kwin_keystate_destroy(self->keystate_interface);
 
-    g_slice_free(XwKeystateState, self->state);
+    g_slice_free(XwKeystateStates, self->states);
 
     G_OBJECT_CLASS(xw_keystate_kde_parent_class)->finalize(gobject);
 }
 
-static XwKeystateState *xw_keystate_kde_get_state(XwKeystate *self) {
-    return XW_KEYSTATE_KDE(self)->state;
+static XwKeystateStates *xw_keystate_kde_get_states(XwKeystate *self) {
+    return XW_KEYSTATE_KDE(self)->states;
 }
 
 gboolean xw_keystate_kde_is_supported() {

@@ -25,9 +25,9 @@ XwKeystate *xw_keystate;
 
 GtkWidget *label;
 
-static void state_changed_event(XwKeystate *xw_keystate, XwKeystateState *state) {
+static void states_changed_event(XwKeystate *xw_keystate, XwKeystateStates *states) {
     gchar label_string[42];
-    sprintf(label_string, "Caps Lock: %d, Num Lock: %d, Scroll Lock: %d", state->capslock, state->numlock, state->scrolllock);
+    sprintf(label_string, "Caps Lock: %d, Num Lock: %d, Scroll Lock: %d", states->capslock, states->numlock, states->scrolllock);
     gtk_label_set_label(GTK_LABEL(label), label_string);
 }
 
@@ -39,8 +39,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
     gtk_container_add(GTK_CONTAINER(window), label);
 
     if (xw_keystate) {
-        XwKeystateState *state = xw_keystate_get_state(xw_keystate);
-        state_changed_event(xw_keystate, state);
+        XwKeystateStates *states = xw_keystate_get_states(xw_keystate);
+        states_changed_event(xw_keystate, states);
     } else
         gtk_label_set_label(GTK_LABEL(label), "keystate is not supported in your environment");
 
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     xw_keystate = xw_keystate_new();
     if (xw_keystate)
-        g_signal_connect(xw_keystate, "state-changed", G_CALLBACK(state_changed_event), NULL);
+        g_signal_connect(xw_keystate, "states-changed", G_CALLBACK(states_changed_event), NULL);
 
     GtkApplication *app = gtk_application_new("org.libxw.examples.keystate", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);

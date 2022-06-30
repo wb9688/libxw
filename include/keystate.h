@@ -25,17 +25,17 @@
 
 G_BEGIN_DECLS
 
-enum xw_keystate_state {
+typedef enum {
     XW_KEYSTATE_STATE_UNLOCKED,
     XW_KEYSTATE_STATE_LATCHED,
     XW_KEYSTATE_STATE_LOCKED
-};
+} xw_keystate_state;
 
 typedef struct {
-    enum xw_keystate_state capslock;
-    enum xw_keystate_state numlock;
-    enum xw_keystate_state scrolllock;
-} XwKeystateState;
+    xw_keystate_state capslock;
+    xw_keystate_state numlock;
+    xw_keystate_state scrolllock;
+} XwKeystateStates;
 
 #define XW_TYPE_KEYSTATE xw_keystate_get_type()
 G_DECLARE_INTERFACE(XwKeystate, xw_keystate, XW, KEYSTATE, GObject)
@@ -43,12 +43,12 @@ G_DECLARE_INTERFACE(XwKeystate, xw_keystate, XW, KEYSTATE, GObject)
 struct _XwKeystateInterface {
     GTypeInterface parent;
 
-    void (*state_changed)(XwKeystate *self, XwKeystateState *state);
+    void (*states_changed)(XwKeystate *self, XwKeystateStates *states);
 
-    XwKeystateState *(*get_state)(XwKeystate *self);
+    XwKeystateStates *(*get_states)(XwKeystate *self);
 };
 
-XwKeystateState *xw_keystate_get_state(XwKeystate *self);
+XwKeystateStates *xw_keystate_get_states(XwKeystate *self);
 
 XwKeystate *xw_keystate_new();
 
