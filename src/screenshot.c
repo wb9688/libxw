@@ -29,7 +29,7 @@ GdkPixbuf *xw_screenshot_take(XwScreenshot *self, GdkMonitor *monitor) {
 
     XwScreenshotInterface *iface = XW_SCREENSHOT_GET_IFACE(self);
     g_return_if_fail(iface->take != NULL);
-    iface->take(self, monitor);
+    return iface->take(self, monitor);
 }
 
 XwScreenshot *xw_screenshot_new() {

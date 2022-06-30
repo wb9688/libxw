@@ -20,12 +20,16 @@
 #ifndef __OUTPUTS_WLROOTS_H__
 #define __OUTPUTS_WLROOTS_H__
 
+#include "wlr-output-management-unstable-v1-client-protocol.h"
+
 #include "outputs.h"
 
 G_BEGIN_DECLS
 
 #define XW_TYPE_OUTPUTS_WLROOTS xw_outputs_wlroots_get_type()
 G_DECLARE_FINAL_TYPE(XwOutputsWlroots, xw_outputs_wlroots, XW, OUTPUTS_WLROOTS, GObject)
+
+void xw_outputs_wlroots_apply_changes(XwOutputsWlroots *self, struct zwlr_output_head_v1 *head, gboolean enabled);
 
 gboolean xw_outputs_wlroots_is_supported();
 

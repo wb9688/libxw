@@ -23,6 +23,7 @@
 #include "wlr-output-management-unstable-v1-client-protocol.h"
 
 #include "output.h"
+#include "outputs-wlroots.h"
 
 G_BEGIN_DECLS
 
@@ -31,7 +32,7 @@ G_DECLARE_FINAL_TYPE(XwOutputWlroots, xw_output_wlroots, XW, OUTPUT_WLROOTS, GOb
 
 gboolean xw_output_wlroots_is_supported();
 
-XwOutputWlroots *xw_output_wlroots_new(struct zwlr_output_head_v1 *head);
+XwOutputWlroots *xw_output_wlroots_new(XwOutputsWlroots *outputs, struct zwlr_output_head_v1 *head);
 
 G_END_DECLS
 

@@ -38,7 +38,7 @@ GList *xw_outputs_get_outputs(XwOutputs *self) {
 
     XwOutputsInterface *iface = XW_OUTPUTS_GET_IFACE(self);
     g_return_if_fail(iface->get_outputs != NULL);
-    iface->get_outputs(self);
+    return iface->get_outputs(self);
 }
 
 XwOutputs *xw_outputs_new() {

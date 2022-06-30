@@ -33,9 +33,13 @@ struct _XwOutputInterface {
 
     void (*destroy)(XwOutput *self);
 
+    gboolean (*get_enabled)(XwOutput *self);
+    void (*set_enabled)(XwOutput *self, gboolean enabled);
     gchar *(*get_name)(XwOutput *self);
 };
 
+gboolean xw_output_get_enabled(XwOutput *self);
+void xw_output_set_enabled(XwOutput *self, gboolean enabled);
 gchar *xw_output_get_name(XwOutput *self);
 
 G_END_DECLS

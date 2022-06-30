@@ -36,10 +36,24 @@ static void destroy_event(XwOutput *output, GtkWidget *label) {
     gtk_widget_destroy(label);
 }
 
+static void toggled_event(GtkToggleButton *check_button, XwOutput *output) {
+    xw_output_set_enabled(output, gtk_toggle_button_get_active(check_button));
+}
+
 static void new_output_event(XwOutputs *xw_outputs, XwOutput *output) {
+    GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+
+    GtkWidget *check_button = gtk_check_button_new();
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check_button), xw_output_get_enabled(output));
+    g_signal_connect(check_button, "toggled", G_CALLBACK(toggled_event), output);
+    gtk_container_add(GTK_CONTAINER(hbox), check_button);
+
     GtkWidget *label = gtk_label_new(xw_output_get_name(output));
-    gtk_container_add(GTK_CONTAINER(box), label);
-    gtk_widget_show(label);
+    gtk_container_add(GTK_CONTAINER(hbox), label);
+
+    gtk_container_add(GTK_CONTAINER(box), hbox);
+
+    gtk_widget_show_all(hbox);
 
     g_signal_connect(output, "notify::name", G_CALLBACK(notify_name_event), label);
 
@@ -61,8 +75,17 @@ static void activate(GtkApplication *app, gpointer user_data) {
         for (GList *output = outputs; output; output = output->next) {
             XwOutput *data = output->data;
 
+            GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+
+            GtkWidget *check_button = gtk_check_button_new();
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check_button), xw_output_get_enabled(data));
+            g_signal_connect(check_button, "toggled", G_CALLBACK(toggled_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), check_button);
+
             GtkWidget *label = gtk_label_new(xw_output_get_name(data));
-            gtk_container_add(GTK_CONTAINER(box), label);
+            gtk_container_add(GTK_CONTAINER(hbox), label);
+
+            gtk_container_add(GTK_CONTAINER(box), hbox);
 
             g_signal_connect(data, "notify::name", G_CALLBACK(notify_name_event), label);
 

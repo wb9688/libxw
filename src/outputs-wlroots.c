@@ -20,7 +20,6 @@
 #include <gdk/gdkwayland.h>
 
 #include <wayland-client-protocol.h>
-#include "wlr-output-management-unstable-v1-client-protocol.h"
 
 #include "outputs-wlroots.h"
 #include "output-wlroots.h"
@@ -29,6 +28,8 @@ struct _XwOutputsWlroots {
     GObject parent_instance;
 
     struct zwlr_output_manager_v1 *output_manager;
+
+    guint32 serial;
 
     GList *outputs;
 };
@@ -71,7 +72,7 @@ static void destroy_event(XwOutput *output, XwOutputsWlroots *self) {
 static void output_manager_handle_head(void *data, struct zwlr_output_manager_v1 *output_manager, struct zwlr_output_head_v1 *head) {
     XwOutputsWlroots *self = XW_OUTPUTS_WLROOTS(data);
 
-    XwOutputWlroots *xw_output = xw_output_wlroots_new(head);
+    XwOutputWlroots *xw_output = xw_output_wlroots_new(self, head);
     self->outputs = g_list_append(self->outputs, xw_output);
 
     g_signal_emit_by_name(self, "new-output", XW_OUTPUT(xw_output));
@@ -79,7 +80,11 @@ static void output_manager_handle_head(void *data, struct zwlr_output_manager_v1
     g_signal_connect(xw_output, "destroy", G_CALLBACK(destroy_event), self);
 }
 
-static void output_manager_handle_done(void *data, struct zwlr_output_manager_v1 *output_manager, uint32_t serial) {}
+static void output_manager_handle_done(void *data, struct zwlr_output_manager_v1 *output_manager, uint32_t serial) {
+    XwOutputsWlroots *self = XW_OUTPUTS_WLROOTS(data);
+
+    self->serial = serial;
+}
 
 static void output_manager_handle_finished(void *data, struct zwlr_output_manager_v1 *output_manager) {}
 
@@ -113,6 +118,35 @@ static void xw_outputs_wlroots_finalize(GObject *gobject) {
 
 static GList *xw_outputs_wlroots_get_outputs(XwOutputs *self) {
     return XW_OUTPUTS_WLROOTS(self)->outputs;
+}
+
+static void output_configuration_handle(void *data, struct zwlr_output_configuration_v1 *output_configuration) {
+    zwlr_output_configuration_v1_destroy(output_configuration);
+}
+
+static const struct zwlr_output_configuration_v1_listener output_configuration_listener = {
+    .succeeded = output_configuration_handle,
+    .failed = output_configuration_handle,
+    .cancelled = output_configuration_handle
+};
+
+void xw_outputs_wlroots_apply_changes(XwOutputsWlroots *self, struct zwlr_output_head_v1 *head, gboolean enabled) {
+    struct zwlr_output_configuration_v1 *output_configuration = zwlr_output_manager_v1_create_configuration(self->output_manager, self->serial);
+
+    zwlr_output_configuration_v1_add_listener(output_configuration, &output_configuration_listener, NULL);
+
+    for (GList *output = self->outputs; output; output = output->next) {
+        GValue value = G_VALUE_INIT;
+        g_object_get_property(G_OBJECT(output->data), "head", &value);
+        struct zwlr_output_head_v1 *output_head = g_value_get_pointer(&value);
+
+        if (head == output_head ? enabled : xw_output_get_enabled(XW_OUTPUT(output->data)))
+            zwlr_output_configuration_v1_enable_head(output_configuration, output_head);
+        else
+            zwlr_output_configuration_v1_disable_head(output_configuration, output_head);
+    }
+
+    zwlr_output_configuration_v1_apply(output_configuration);
 }
 
 gboolean xw_outputs_wlroots_is_supported() {

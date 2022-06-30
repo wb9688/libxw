@@ -39,7 +39,7 @@ XwKeystateState *xw_keystate_get_state(XwKeystate *self) {
 
     XwKeystateInterface *iface = XW_KEYSTATE_GET_IFACE(self);
     g_return_if_fail(iface->get_state != NULL);
-    iface->get_state(self);
+    return iface->get_state(self);
 }
 
 XwKeystate *xw_keystate_new() {

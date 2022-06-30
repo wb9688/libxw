@@ -24,17 +24,21 @@
 struct _XwOutputWlroots {
     GObject parent_instance;
 
+    XwOutputsWlroots *outputs;
     struct zwlr_output_head_v1 *head;
 
     GList *modes;
 
+    gboolean enabled;
     gchar *name;
 };
 
 typedef enum {
-    PROP_HEAD = 1,
-    PROP_NAME,
-    N_PROPERTIES
+    PROP_OUTPUTS = 1,
+    PROP_HEAD,
+    N_PROPERTIES,
+    PROP_ENABLED,
+    PROP_NAME
 } XwOutputWlrootsProperty;
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
@@ -43,8 +47,14 @@ static void xw_output_wlroots_set_property(GObject *object, guint property_id, c
     XwOutputWlroots *self = XW_OUTPUT_WLROOTS(object);
 
     switch ((XwOutputWlrootsProperty) property_id) {
+        case PROP_OUTPUTS:
+            self->outputs = g_value_get_pointer(value);
+            break;
         case PROP_HEAD:
             self->head = g_value_get_pointer(value);
+            break;
+        case PROP_ENABLED:
+            self->enabled = g_value_get_boolean(value);
             break;
         case PROP_NAME:
             g_free(self->name);
@@ -60,8 +70,14 @@ static void xw_output_wlroots_get_property(GObject *object, guint property_id, G
     XwOutputWlroots *self = XW_OUTPUT_WLROOTS(object);
 
     switch ((XwOutputWlrootsProperty) property_id) {
+        case PROP_OUTPUTS:
+            g_value_set_pointer(value, self->outputs);
+            break;
         case PROP_HEAD:
             g_value_set_pointer(value, self->head);
+            break;
+        case PROP_ENABLED:
+            g_value_set_boolean(value, self->enabled);
             break;
         case PROP_NAME:
             g_value_set_static_string(value, self->name);
@@ -75,6 +91,8 @@ static void xw_output_wlroots_get_property(GObject *object, guint property_id, G
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface);
 static void xw_output_wlroots_constructed(GObject *gobject);
 static void xw_output_wlroots_finalize(GObject *gobject);
+static gboolean xw_output_wlroots_get_enabled(XwOutput *output);
+static void xw_output_wlroots_set_enabled(XwOutput *output, gboolean enabled);
 static gchar *xw_output_wlroots_get_name(XwOutput *output);
 
 G_DEFINE_TYPE_WITH_CODE(XwOutputWlroots, xw_output_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_OUTPUT, xw_output_wlroots_output_interface_init))
@@ -85,10 +103,12 @@ static void xw_output_wlroots_class_init(XwOutputWlrootsClass *klass) {
     object_class->set_property = xw_output_wlroots_set_property;
     object_class->get_property = xw_output_wlroots_get_property;
 
+    obj_properties[PROP_OUTPUTS] = g_param_spec_pointer("outputs", "Outputs", "Outputs", G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
     obj_properties[PROP_HEAD] = g_param_spec_pointer("head", "Head", "Head", G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE);
 
-    g_object_class_install_properties(object_class, N_PROPERTIES - 1, obj_properties); // TODO: Do this properly instead of - 1
+    g_object_class_install_properties(object_class, N_PROPERTIES, obj_properties);
 
+    g_object_class_override_property(object_class, PROP_ENABLED, "enabled");
     g_object_class_override_property(object_class, PROP_NAME, "name");
 
     object_class->constructed = xw_output_wlroots_constructed;
@@ -96,6 +116,8 @@ static void xw_output_wlroots_class_init(XwOutputWlrootsClass *klass) {
 }
 
 static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface) {
+    iface->get_enabled = xw_output_wlroots_get_enabled;
+    iface->set_enabled = xw_output_wlroots_set_enabled;
     iface->get_name = xw_output_wlroots_get_name;
 }
 
@@ -140,7 +162,13 @@ static void output_head_handle_mode(void *data, struct zwlr_output_head_v1 *outp
     self->modes = g_list_append(self->modes, mode);
 }
 
-static void output_head_handle_enabled(void *data, struct zwlr_output_head_v1 *output_head, int32_t enabled) {}
+static void output_head_handle_enabled(void *data, struct zwlr_output_head_v1 *output_head, int32_t enabled) {
+    GValue val = G_VALUE_INIT;
+    g_value_init(&val, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&val, enabled);
+
+    g_object_set_property(G_OBJECT(data), "enabled", &val);
+}
 
 static void output_head_handle_current_mode(void *data, struct zwlr_output_head_v1 *output_head, struct zwlr_output_mode_v1 *mode) {}
 
@@ -176,8 +204,7 @@ static const struct zwlr_output_head_v1_listener output_head_listener = {
     .serial_number = output_head_handle_serial_number
 };
 
-static void xw_output_wlroots_init(XwOutputWlroots *self) {
-}
+static void xw_output_wlroots_init(XwOutputWlroots *self) {}
 
 static void xw_output_wlroots_constructed(GObject *gobject) {
     XwOutputWlroots *self = XW_OUTPUT_WLROOTS(gobject);
@@ -198,7 +225,16 @@ static void xw_output_wlroots_finalize(GObject *gobject) {
     G_OBJECT_CLASS(xw_output_wlroots_parent_class)->finalize(gobject);
 }
 
-gchar *xw_output_wlroots_get_name(XwOutput *self) {
+static gboolean xw_output_wlroots_get_enabled(XwOutput *self) {
+    return XW_OUTPUT_WLROOTS(self)->enabled;
+}
+
+static void xw_output_wlroots_set_enabled(XwOutput *self, gboolean enabled) {
+    XwOutputWlroots *output = XW_OUTPUT_WLROOTS(self);
+    xw_outputs_wlroots_apply_changes(output->outputs, output->head, enabled);
+}
+
+static gchar *xw_output_wlroots_get_name(XwOutput *self) {
     return XW_OUTPUT_WLROOTS(self)->name;
 }
 
@@ -208,9 +244,9 @@ gboolean xw_output_wlroots_is_supported() {
     return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_output_manager_v1_interface.name);
 }
 
-XwOutputWlroots *xw_output_wlroots_new(struct zwlr_output_head_v1 *head) {
+XwOutputWlroots *xw_output_wlroots_new(XwOutputsWlroots *outputs, struct zwlr_output_head_v1 *head) {
     if (xw_output_wlroots_is_supported()) {
-        XwOutputWlroots *self = XW_OUTPUT_WLROOTS(g_object_new(XW_TYPE_OUTPUT_WLROOTS, "head", head, NULL));
+        XwOutputWlroots *self = XW_OUTPUT_WLROOTS(g_object_new(XW_TYPE_OUTPUT_WLROOTS, "outputs", outputs, "head", head, NULL));
         return self;
     }
 
