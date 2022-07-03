@@ -18,7 +18,6 @@
  */
 
 #include "output.h"
-#include "output-wlroots.h"
 
 G_DEFINE_INTERFACE(XwOutput, xw_output, G_TYPE_OBJECT)
 

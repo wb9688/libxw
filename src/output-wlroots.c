@@ -137,6 +137,8 @@ static void xw_output_wlroots_output_interface_init(XwOutputInterface *iface) {
     iface->set_enabled = xw_output_wlroots_set_enabled;
 }
 
+static void xw_output_wlroots_init(XwOutputWlroots *self) {}
+
 static void output_mode_handle_size(void *data, struct zwlr_output_mode_v1 *output_mode, int32_t width, int32_t height) {}
 
 static void output_mode_handle_refresh(void *data, struct zwlr_output_mode_v1 *output_mode, int32_t refresh) {}
@@ -226,8 +228,6 @@ static const struct zwlr_output_head_v1_listener output_head_listener = {
     .serial_number = output_head_handle_serial_number
 };
 
-static void xw_output_wlroots_init(XwOutputWlroots *self) {}
-
 static void xw_output_wlroots_constructed(GObject *gobject) {
     XwOutputWlroots *self = XW_OUTPUT_WLROOTS(gobject);
 
@@ -240,6 +240,7 @@ static void xw_output_wlroots_finalize(GObject *gobject) {
     XwOutputWlroots *self = XW_OUTPUT_WLROOTS(gobject);
 
     g_free(self->name);
+    g_free(self->description);
 
     g_list_free_full(self->modes, (GDestroyNotify) zwlr_output_mode_v1_destroy);
     zwlr_output_head_v1_destroy(self->head);
@@ -272,8 +273,7 @@ gboolean xw_output_wlroots_is_supported() {
 
 XwOutputWlroots *xw_output_wlroots_new(XwOutputsWlroots *outputs, struct zwlr_output_head_v1 *head) {
     if (xw_output_wlroots_is_supported()) {
-        XwOutputWlroots *self = XW_OUTPUT_WLROOTS(g_object_new(XW_TYPE_OUTPUT_WLROOTS, "outputs", outputs, "head", head, NULL));
-        return self;
+        return XW_OUTPUT_WLROOTS(g_object_new(XW_TYPE_OUTPUT_WLROOTS, "outputs", outputs, "head", head, NULL));
     }
 
     return NULL;
