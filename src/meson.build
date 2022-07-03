@@ -31,6 +31,9 @@ libxw = shared_library(
     install: true
 )
 
+pkgconfig = import('pkgconfig')
+pkgconfig.generate(libxw, subdirs: ['libxw'])
+
 xw = declare_dependency(
     link_with: libxw,
     include_directories: include_directories('../include')
