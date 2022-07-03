@@ -32,8 +32,8 @@ static void notify_description_event(XwOutput *output, GParamSpec *pspec, GtkLab
     gtk_label_set_text(label, g_value_get_string(&val));
 }
 
-static void destroy_event(XwOutput *output, GtkWidget *label) {
-    gtk_widget_destroy(label);
+static void destroy_event(XwOutput *output, GtkWidget *widget) {
+    gtk_widget_destroy(widget);
 }
 
 static void toggled_event(GtkToggleButton *check_button, XwOutput *output) {
@@ -57,7 +57,7 @@ static void new_output_event(XwOutputs *xw_outputs, XwOutput *output) {
 
     g_signal_connect(output, "notify::description", G_CALLBACK(notify_description_event), label);
 
-    g_signal_connect(output, "destroy", G_CALLBACK(destroy_event), label);
+    g_signal_connect(output, "destroy", G_CALLBACK(destroy_event), hbox);
 }
 
 static void activate(GtkApplication *app, gpointer user_data) {
@@ -89,7 +89,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
             g_signal_connect(data, "notify::description", G_CALLBACK(notify_description_event), label);
 
-            g_signal_connect(data, "destroy", G_CALLBACK(destroy_event), label);
+            g_signal_connect(data, "destroy", G_CALLBACK(destroy_event), hbox);
         }
     }
 
