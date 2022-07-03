@@ -9,6 +9,7 @@ Currently it has the following interfaces:
 - keystate (supports KDE and X11)
 - outputs (supports wlroots)
 - screenshot (supports wlroots)
+- toplevels (supports wlroots)
 
 ## IRC
 

@@ -3,6 +3,8 @@ install_headers(
   'output.h',
   'outputs.h',
   'screenshot.h',
+  'toplevel.h',
+  'toplevels.h',
 
   subdir: 'xw'
 )

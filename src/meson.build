@@ -12,7 +12,11 @@ libxw = shared_library(
         'outputs.c',
         'outputs-wlroots.c',
         'screenshot.c',
-        'screenshot-wlroots.c'
+        'screenshot-wlroots.c',
+        'toplevel.c',
+        'toplevel-wlroots.c',
+        'toplevels.c',
+        'toplevels-wlroots.c'
     ],
 
     dependencies: [
