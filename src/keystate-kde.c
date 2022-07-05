@@ -17,11 +17,10 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <gdk/gdkwayland.h>
-
 #include <wayland-client-protocol.h>
 #include "keystate-client-protocol.h"
 
+#include "config.h"
 #include "keystate-kde.h"
 
 struct _XwKeystateKde {
@@ -79,8 +78,7 @@ static const struct org_kde_kwin_keystate_listener state_changed_listener = {
 };
 
 static void xw_keystate_kde_init(XwKeystateKde *self) {
-    GdkDisplay *gdk_display = gdk_display_get_default();
-    struct wl_display *display = gdk_wayland_display_get_wl_display(GDK_WAYLAND_DISPLAY(gdk_display));
+    struct wl_display *display = xw_config_get_wl_display();
 
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, self);
@@ -110,7 +108,5 @@ static XwKeystateStates *xw_keystate_kde_get_states(XwKeystate *self) {
 }
 
 gboolean xw_keystate_kde_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), org_kde_kwin_keystate_interface.name);
+    return xw_config_has_wl_registry_global(org_kde_kwin_keystate_interface.name);
 }

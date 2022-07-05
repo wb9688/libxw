@@ -17,10 +17,9 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <gdk/gdkwayland.h>
-
 #include <wayland-client-protocol.h>
 
+#include "config.h"
 #include "outputs-wlroots.h"
 #include "output-wlroots.h"
 
@@ -95,8 +94,7 @@ static const struct zwlr_output_manager_v1_listener output_manager_listener = {
 };
 
 static void xw_outputs_wlroots_init(XwOutputsWlroots *self) {
-    GdkDisplay *gdk_display = gdk_display_get_default();
-    struct wl_display *display = gdk_wayland_display_get_wl_display(GDK_WAYLAND_DISPLAY(gdk_display));
+    struct wl_display *display = xw_config_get_wl_display();
 
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, self);
@@ -150,7 +148,5 @@ void xw_outputs_wlroots_apply_changes(XwOutputsWlroots *self, struct zwlr_output
 }
 
 gboolean xw_outputs_wlroots_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_output_manager_v1_interface.name);
+    return xw_config_has_wl_registry_global(zwlr_output_manager_v1_interface.name);
 }

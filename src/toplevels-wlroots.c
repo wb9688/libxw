@@ -21,6 +21,7 @@
 
 #include <wayland-client-protocol.h>
 
+#include "config.h"
 #include "toplevels-wlroots.h"
 #include "toplevel-wlroots.h"
 
@@ -86,8 +87,7 @@ static const struct zwlr_foreign_toplevel_manager_v1_listener foreign_toplevel_m
 };
 
 static void xw_toplevels_wlroots_init(XwToplevelsWlroots *self) {
-    GdkDisplay *gdk_display = gdk_display_get_default();
-    struct wl_display *display = gdk_wayland_display_get_wl_display(GDK_WAYLAND_DISPLAY(gdk_display));
+    struct wl_display *display = xw_config_get_wl_display();
 
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, self);
@@ -112,7 +112,5 @@ static GList *xw_toplevels_wlroots_get_toplevels(XwToplevels *self) {
 }
 
 gboolean xw_toplevels_wlroots_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_foreign_toplevel_manager_v1_interface.name);
+    return xw_config_has_wl_registry_global(zwlr_foreign_toplevel_manager_v1_interface.name);
 }

@@ -27,6 +27,7 @@
 #include <wayland-client-protocol.h>
 #include "wlr-screencopy-unstable-v1-client-protocol.h"
 
+#include "config.h"
 #include "screenshot-wlroots.h"
 
 struct _XwScreenshotWlroots {
@@ -78,8 +79,7 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 static void xw_screenshot_wlroots_init(XwScreenshotWlroots *self) {
-    GdkDisplay *gdk_display = gdk_display_get_default();
-    struct wl_display *display = gdk_wayland_display_get_wl_display(GDK_WAYLAND_DISPLAY(gdk_display));
+    struct wl_display *display = xw_config_get_wl_display();
 
     struct wl_registry *registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, self);
@@ -243,7 +243,5 @@ static GdkPixbuf *xw_screenshot_wlroots_take(XwScreenshot *self, GdkMonitor *mon
 }
 
 gboolean xw_screenshot_wlroots_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), wl_shm_interface.name) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_screencopy_manager_v1_interface.name);
+    return xw_config_has_wl_registry_global(wl_shm_interface.name) && xw_config_has_wl_registry_global(zwlr_screencopy_manager_v1_interface.name);
 }

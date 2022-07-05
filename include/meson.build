@@ -1,4 +1,5 @@
 install_headers(
+  'config.h',
   'keystate.h',
   'output.h',
   'outputs.h',

@@ -17,8 +17,6 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <gdk/gdkwayland.h>
-
 #include "output-wlroots.h"
 
 struct _XwOutputWlroots {
@@ -266,9 +264,7 @@ static void xw_output_wlroots_set_enabled(XwOutput *self, gboolean enabled) {
 }
 
 gboolean xw_output_wlroots_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_output_manager_v1_interface.name);
+    return xw_config_has_wl_registry_global(zwlr_output_manager_v1_interface.name);
 }
 
 XwOutputWlroots *xw_output_wlroots_new(XwOutputsWlroots *outputs, struct zwlr_output_head_v1 *head) {

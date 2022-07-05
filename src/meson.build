@@ -4,6 +4,7 @@ libxw = shared_library(
     'xw',
 
     sources: [
+        'config.c',
         'keystate.c',
         'keystate-kde.c',
         'keystate-x11.c',

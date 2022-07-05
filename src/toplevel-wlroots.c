@@ -17,8 +17,6 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <gdk/gdkwayland.h>
-
 #include "toplevel-wlroots.h"
 
 struct _XwToplevelWlroots {
@@ -181,9 +179,7 @@ static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self) {
 }
 
 gboolean xw_toplevel_wlroots_is_supported() {
-    GdkDisplay *display = gdk_display_get_default();
-
-    return GDK_IS_WAYLAND_DISPLAY(display) && gdk_wayland_display_query_registry(GDK_WAYLAND_DISPLAY(display), zwlr_foreign_toplevel_manager_v1_interface.name);
+    return xw_config_has_wl_registry_global(zwlr_foreign_toplevel_manager_v1_interface.name);
 }
 
 XwToplevelWlroots *xw_toplevel_wlroots_new(struct zwlr_foreign_toplevel_handle_v1 *toplevel) {
