@@ -26,10 +26,7 @@ XwOutputs *xw_outputs;
 GtkWidget *box;
 
 static void notify_description_event(XwOutput *output, GParamSpec *pspec, GtkLabel *label) {
-    GValue val = G_VALUE_INIT;
-    g_object_get_property(G_OBJECT(output), "description", &val);
-
-    gtk_label_set_text(label, g_value_get_string(&val));
+    gtk_label_set_text(label, xw_output_get_description(output));
 }
 
 static void destroy_event(XwOutput *output, GtkWidget *widget) {

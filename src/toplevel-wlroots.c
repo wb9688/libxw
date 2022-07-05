@@ -27,12 +27,14 @@ struct _XwToplevelWlroots {
     struct zwlr_foreign_toplevel_handle_v1 *toplevel;
 
     gchar *title;
+    gchar *app_id;
 };
 
 typedef enum {
     PROP_TOPLEVEL = 1,
     N_PROPERTIES,
-    PROP_TITLE
+    PROP_TITLE,
+    PROP_APP_ID
 } XwToplevelWlrootsProperty;
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
@@ -47,6 +49,10 @@ static void xw_toplevel_wlroots_set_property(GObject *object, guint property_id,
         case PROP_TITLE:
             g_free(self->title);
             self->title = g_value_dup_string(value);
+            break;
+        case PROP_APP_ID:
+            g_free(self->app_id);
+            self->app_id = g_value_dup_string(value);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -64,6 +70,9 @@ static void xw_toplevel_wlroots_get_property(GObject *object, guint property_id,
         case PROP_TITLE:
             g_value_set_static_string(value, self->title);
             break;
+        case PROP_APP_ID:
+            g_value_set_static_string(value, self->app_id);
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -75,6 +84,7 @@ static void xw_toplevel_wlroots_constructed(GObject *gobject);
 static void xw_toplevel_wlroots_finalize(GObject *gobject);
 
 static gchar *xw_toplevel_wlroots_get_title(XwToplevel *self);
+static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwToplevelWlroots, xw_toplevel_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_TOPLEVEL, xw_toplevel_wlroots_toplevel_interface_init))
 
@@ -89,6 +99,7 @@ static void xw_toplevel_wlroots_class_init(XwToplevelWlrootsClass *klass) {
     g_object_class_install_properties(object_class, N_PROPERTIES, obj_properties);
 
     g_object_class_override_property(object_class, PROP_TITLE, "title");
+    g_object_class_override_property(object_class, PROP_APP_ID, "app-id");
 
     object_class->constructed = xw_toplevel_wlroots_constructed;
     object_class->finalize = xw_toplevel_wlroots_finalize;
@@ -96,6 +107,7 @@ static void xw_toplevel_wlroots_class_init(XwToplevelWlrootsClass *klass) {
 
 static void xw_toplevel_wlroots_toplevel_interface_init(XwToplevelInterface *iface) {
     iface->get_title = xw_toplevel_wlroots_get_title;
+    iface->get_app_id = xw_toplevel_wlroots_get_app_id;
 }
 
 static void xw_toplevel_wlroots_init(XwToplevelWlroots *self) {}
@@ -108,7 +120,13 @@ static void foreign_toplevel_handle_handle_title(void *data, struct zwlr_foreign
     g_object_set_property(G_OBJECT(data), "title", &val);
 }
 
-static void foreign_toplevel_handle_handle_app_id(void *data, struct zwlr_foreign_toplevel_handle_v1 *foreign_toplevel_handle, const char *app_id) {}
+static void foreign_toplevel_handle_handle_app_id(void *data, struct zwlr_foreign_toplevel_handle_v1 *foreign_toplevel_handle, const char *app_id) {
+    GValue val = G_VALUE_INIT;
+    g_value_init(&val, G_TYPE_STRING);
+    g_value_set_static_string(&val, app_id);
+
+    g_object_set_property(G_OBJECT(data), "app-id", &val);
+}
 
 static void foreign_toplevel_handle_handle_output_enter(void *data, struct zwlr_foreign_toplevel_handle_v1 *foreign_toplevel_handle, struct wl_output *output) {}
 
@@ -147,6 +165,7 @@ static void xw_toplevel_wlroots_finalize(GObject *gobject) {
     XwToplevelWlroots *self = XW_TOPLEVEL_WLROOTS(gobject);
 
     g_free(self->title);
+    g_free(self->app_id);
 
     zwlr_foreign_toplevel_handle_v1_destroy(self->toplevel);
 
@@ -155,6 +174,10 @@ static void xw_toplevel_wlroots_finalize(GObject *gobject) {
 
 static gchar *xw_toplevel_wlroots_get_title(XwToplevel *self) {
     return XW_TOPLEVEL_WLROOTS(self)->title;
+}
+
+static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self) {
+    return XW_TOPLEVEL_WLROOTS(self)->app_id;
 }
 
 gboolean xw_toplevel_wlroots_is_supported() {

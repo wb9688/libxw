@@ -26,10 +26,7 @@ XwToplevels *xw_toplevels;
 GtkWidget *box;
 
 static void notify_title_event(XwToplevel *toplevel, GParamSpec *pspec, GtkLabel *label) {
-    GValue val = G_VALUE_INIT;
-    g_object_get_property(G_OBJECT(toplevel), "title", &val);
-
-    gtk_label_set_text(label, g_value_get_string(&val));
+    gtk_label_set_text(label, xw_toplevel_get_title(toplevel));
 }
 
 static void destroy_event(XwToplevel *toplevel, GtkWidget *widget) {
