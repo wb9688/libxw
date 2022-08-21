@@ -29,7 +29,23 @@ static void notify_title_event(XwToplevel *toplevel, GParamSpec *pspec, GtkLabel
     gtk_label_set_text(label, xw_toplevel_get_title(toplevel));
 }
 
-static void clicked_event(GtkButton *button, XwToplevel *toplevel) {
+static void notify_minimized_event(XwToplevel *toplevel, GParamSpec *pspec, GtkButton *button) {
+    gtk_button_set_label(button, xw_toplevel_get_minimized(toplevel) ? "Unminimize" : "Minimize");
+}
+
+static void notify_maximized_event(XwToplevel *toplevel, GParamSpec *pspec, GtkButton *button) {
+    gtk_button_set_label(button, xw_toplevel_get_maximized(toplevel) ? "Unmaximize" : "Maximize");
+}
+
+static void minimize_clicked_event(GtkButton *button, XwToplevel *toplevel) {
+    xw_toplevel_set_minimized(toplevel, !xw_toplevel_get_minimized(toplevel));
+}
+
+static void maximize_clicked_event(GtkButton *button, XwToplevel *toplevel) {
+    xw_toplevel_set_maximized(toplevel, !xw_toplevel_get_maximized(toplevel));
+}
+
+static void close_clicked_event(GtkButton *button, XwToplevel *toplevel) {
     xw_toplevel_close(toplevel);
 }
 
@@ -40,9 +56,17 @@ static void destroy_event(XwToplevel *toplevel, GtkWidget *widget) {
 static void new_toplevel_event(XwToplevels *xw_toplevels, XwToplevel *toplevel) {
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
 
-    GtkWidget *button = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
-    g_signal_connect(button, "clicked", G_CALLBACK(clicked_event), toplevel);
-    gtk_container_add(GTK_CONTAINER(hbox), button);
+    GtkWidget *minimize_button = gtk_button_new_with_label(xw_toplevel_get_minimized(toplevel) ? "Unminimize" : "Minimize");
+    g_signal_connect(minimize_button, "clicked", G_CALLBACK(minimize_clicked_event), toplevel);
+    gtk_container_add(GTK_CONTAINER(hbox), minimize_button);
+
+    GtkWidget *maximize_button = gtk_button_new_with_label(xw_toplevel_get_maximized(toplevel) ? "Unmaximize" : "Maximize");
+    g_signal_connect(maximize_button, "clicked", G_CALLBACK(maximize_clicked_event), toplevel);
+    gtk_container_add(GTK_CONTAINER(hbox), maximize_button);
+
+    GtkWidget *close_button = gtk_button_new_with_label("Close");
+    g_signal_connect(close_button, "clicked", G_CALLBACK(close_clicked_event), toplevel);
+    gtk_container_add(GTK_CONTAINER(hbox), close_button);
 
     GtkWidget *label = gtk_label_new(xw_toplevel_get_title(toplevel));
     gtk_container_add(GTK_CONTAINER(hbox), label);
@@ -52,6 +76,8 @@ static void new_toplevel_event(XwToplevels *xw_toplevels, XwToplevel *toplevel) 
     gtk_widget_show_all(hbox);
 
     g_signal_connect(toplevel, "notify::title", G_CALLBACK(notify_title_event), label);
+    g_signal_connect(toplevel, "notify::minimized", G_CALLBACK(notify_minimized_event), minimize_button);
+    g_signal_connect(toplevel, "notify::maximized", G_CALLBACK(notify_maximized_event), maximize_button);
 
     g_signal_connect(toplevel, "destroy", G_CALLBACK(destroy_event), hbox);
 }
@@ -73,9 +99,17 @@ static void activate(GtkApplication *app, gpointer user_data) {
 
             GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
 
-            GtkWidget *button = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
-            g_signal_connect(button, "clicked", G_CALLBACK(clicked_event), data);
-            gtk_container_add(GTK_CONTAINER(hbox), button);
+            GtkWidget *minimize_button = gtk_button_new_with_label(xw_toplevel_get_minimized(data) ? "Unminimize" : "Minimize");
+            g_signal_connect(minimize_button, "clicked", G_CALLBACK(minimize_clicked_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), minimize_button);
+
+            GtkWidget *maximize_button = gtk_button_new_with_label(xw_toplevel_get_maximized(data) ? "Unmaximize" : "Maximize");
+            g_signal_connect(maximize_button, "clicked", G_CALLBACK(maximize_clicked_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), maximize_button);
+
+            GtkWidget *close_button = gtk_button_new_with_label("Close");
+            g_signal_connect(close_button, "clicked", G_CALLBACK(close_clicked_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), close_button);
 
             GtkWidget *label = gtk_label_new(xw_toplevel_get_title(data));
             gtk_container_add(GTK_CONTAINER(hbox), label);
@@ -83,6 +117,8 @@ static void activate(GtkApplication *app, gpointer user_data) {
             gtk_container_add(GTK_CONTAINER(box), hbox);
 
             g_signal_connect(data, "notify::title", G_CALLBACK(notify_title_event), label);
+            g_signal_connect(data, "notify::minimized", G_CALLBACK(notify_minimized_event), minimize_button);
+            g_signal_connect(data, "notify::maximized", G_CALLBACK(notify_maximized_event), maximize_button);
 
             g_signal_connect(data, "destroy", G_CALLBACK(destroy_event), hbox);
         }
