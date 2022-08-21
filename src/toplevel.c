@@ -50,3 +50,11 @@ gchar *xw_toplevel_get_app_id(XwToplevel *self) {
     g_return_if_fail(iface->get_app_id != NULL);
     return iface->get_app_id(self);
 }
+
+void xw_toplevel_close(XwToplevel *self) {
+    g_return_if_fail(XW_IS_TOPLEVEL(self));
+
+    XwToplevelInterface *iface = XW_TOPLEVEL_GET_IFACE(self);
+    g_return_if_fail(iface->close != NULL);
+    iface->close(self);
+}

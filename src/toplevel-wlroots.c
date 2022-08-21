@@ -86,6 +86,8 @@ static void xw_toplevel_wlroots_finalize(GObject *gobject);
 static gchar *xw_toplevel_wlroots_get_title(XwToplevel *self);
 static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self);
 
+static void xw_toplevel_wlroots_close(XwToplevel *self);
+
 G_DEFINE_TYPE_WITH_CODE(XwToplevelWlroots, xw_toplevel_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_TOPLEVEL, xw_toplevel_wlroots_toplevel_interface_init))
 
 static void xw_toplevel_wlroots_class_init(XwToplevelWlrootsClass *klass) {
@@ -108,6 +110,8 @@ static void xw_toplevel_wlroots_class_init(XwToplevelWlrootsClass *klass) {
 static void xw_toplevel_wlroots_toplevel_interface_init(XwToplevelInterface *iface) {
     iface->get_title = xw_toplevel_wlroots_get_title;
     iface->get_app_id = xw_toplevel_wlroots_get_app_id;
+
+    iface->close = xw_toplevel_wlroots_close;
 }
 
 static void xw_toplevel_wlroots_init(XwToplevelWlroots *self) {}
@@ -178,6 +182,10 @@ static gchar *xw_toplevel_wlroots_get_title(XwToplevel *self) {
 
 static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self) {
     return XW_TOPLEVEL_WLROOTS(self)->app_id;
+}
+
+static void xw_toplevel_wlroots_close(XwToplevel *self) {
+    zwlr_foreign_toplevel_handle_v1_close(XW_TOPLEVEL_WLROOTS(self)->toplevel);
 }
 
 gboolean xw_toplevel_wlroots_is_supported() {

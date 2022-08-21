@@ -29,12 +29,20 @@ static void notify_title_event(XwToplevel *toplevel, GParamSpec *pspec, GtkLabel
     gtk_label_set_text(label, xw_toplevel_get_title(toplevel));
 }
 
+static void clicked_event(GtkButton *button, XwToplevel *toplevel) {
+    xw_toplevel_close(toplevel);
+}
+
 static void destroy_event(XwToplevel *toplevel, GtkWidget *widget) {
     gtk_widget_destroy(widget);
 }
 
 static void new_toplevel_event(XwToplevels *xw_toplevels, XwToplevel *toplevel) {
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+
+    GtkWidget *button = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
+    g_signal_connect(button, "clicked", G_CALLBACK(clicked_event), toplevel);
+    gtk_container_add(GTK_CONTAINER(hbox), button);
 
     GtkWidget *label = gtk_label_new(xw_toplevel_get_title(toplevel));
     gtk_container_add(GTK_CONTAINER(hbox), label);
@@ -64,6 +72,10 @@ static void activate(GtkApplication *app, gpointer user_data) {
             XwToplevel *data = toplevel->data;
 
             GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+
+            GtkWidget *button = gtk_button_new_from_icon_name("window-close", GTK_ICON_SIZE_BUTTON);
+            g_signal_connect(button, "clicked", G_CALLBACK(clicked_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), button);
 
             GtkWidget *label = gtk_label_new(xw_toplevel_get_title(data));
             gtk_container_add(GTK_CONTAINER(hbox), label);

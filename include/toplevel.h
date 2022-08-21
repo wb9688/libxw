@@ -35,10 +35,14 @@ struct _XwToplevelInterface {
 
     gchar *(*get_title)(XwToplevel *self);
     gchar *(*get_app_id)(XwToplevel *self);
+
+    void (*close)(XwToplevel *self);
 };
 
 gchar *xw_toplevel_get_title(XwToplevel *self);
 gchar *xw_toplevel_get_app_id(XwToplevel *self);
+
+void xw_toplevel_close(XwToplevel *self);
 
 G_END_DECLS
 
