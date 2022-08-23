@@ -31,6 +31,7 @@ struct _XwToplevelWlroots {
     gboolean minimized;
     gboolean maximized;
     gboolean fullscreen;
+    gboolean activated;
 };
 
 typedef enum {
@@ -40,7 +41,8 @@ typedef enum {
     PROP_APP_ID,
     PROP_MINIMIZED,
     PROP_MAXIMIZED,
-    PROP_FULLSCREEN
+    PROP_FULLSCREEN,
+    PROP_ACTIVATED
 } XwToplevelWlrootsProperty;
 
 static GParamSpec *obj_properties[N_PROPERTIES] = { NULL, };
@@ -68,6 +70,9 @@ static void xw_toplevel_wlroots_set_property(GObject *object, guint property_id,
             break;
         case PROP_FULLSCREEN:
             self->fullscreen = g_value_get_boolean(value);
+            break;
+        case PROP_ACTIVATED:
+            self->activated = g_value_get_boolean(value);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -97,6 +102,9 @@ static void xw_toplevel_wlroots_get_property(GObject *object, guint property_id,
         case PROP_FULLSCREEN:
             g_value_set_boolean(value, self->fullscreen);
             break;
+        case PROP_ACTIVATED:
+            g_value_set_boolean(value, self->activated);
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
             break;
@@ -112,10 +120,12 @@ static gchar *xw_toplevel_wlroots_get_app_id(XwToplevel *self);
 static gboolean xw_toplevel_wlroots_get_minimized(XwToplevel *self);
 static gboolean xw_toplevel_wlroots_get_maximized(XwToplevel *self);
 static gboolean xw_toplevel_wlroots_get_fullscreen(XwToplevel *self);
+static gboolean xw_toplevel_wlroots_get_activated(XwToplevel *self);
 
 static void xw_toplevel_wlroots_set_minimized(XwToplevel *self, gboolean minimized);
 static void xw_toplevel_wlroots_set_maximized(XwToplevel *self, gboolean maximized);
 static void xw_toplevel_wlroots_set_fullscreen(XwToplevel *self, gboolean fullscreen);
+static void xw_toplevel_wlroots_activate(XwToplevel *self);
 static void xw_toplevel_wlroots_close(XwToplevel *self);
 
 G_DEFINE_TYPE_WITH_CODE(XwToplevelWlroots, xw_toplevel_wlroots, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(XW_TYPE_TOPLEVEL, xw_toplevel_wlroots_toplevel_interface_init))
@@ -135,6 +145,7 @@ static void xw_toplevel_wlroots_class_init(XwToplevelWlrootsClass *klass) {
     g_object_class_override_property(object_class, PROP_MINIMIZED, "minimized");
     g_object_class_override_property(object_class, PROP_MAXIMIZED, "maximized");
     g_object_class_override_property(object_class, PROP_FULLSCREEN, "fullscreen");
+    g_object_class_override_property(object_class, PROP_ACTIVATED, "activated");
 
     object_class->constructed = xw_toplevel_wlroots_constructed;
     object_class->finalize = xw_toplevel_wlroots_finalize;
@@ -146,10 +157,12 @@ static void xw_toplevel_wlroots_toplevel_interface_init(XwToplevelInterface *ifa
     iface->get_minimized = xw_toplevel_wlroots_get_minimized;
     iface->get_maximized = xw_toplevel_wlroots_get_maximized;
     iface->get_fullscreen = xw_toplevel_wlroots_get_fullscreen;
+    iface->get_activated = xw_toplevel_wlroots_get_activated;
 
     iface->set_minimized = xw_toplevel_wlroots_set_minimized;
     iface->set_maximized = xw_toplevel_wlroots_set_maximized;
     iface->set_fullscreen = xw_toplevel_wlroots_set_fullscreen;
+    iface->activate = xw_toplevel_wlroots_activate;
     iface->close = xw_toplevel_wlroots_close;
 }
 
@@ -199,6 +212,12 @@ static void foreign_toplevel_handle_handle_state(void *data, struct zwlr_foreign
     g_value_set_boolean(&fullscreen_val, flags & (1 << ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN));
 
     g_object_set_property(G_OBJECT(data), "fullscreen", &fullscreen_val);
+
+    GValue activated_val = G_VALUE_INIT;
+    g_value_init(&activated_val, G_TYPE_BOOLEAN);
+    g_value_set_boolean(&activated_val, flags & (1 << ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED));
+
+    g_object_set_property(G_OBJECT(data), "activated", &activated_val);
 }
 
 static void foreign_toplevel_handle_handle_done(void *data, struct zwlr_foreign_toplevel_handle_v1 *foreign_toplevel_handle) {}
@@ -259,6 +278,10 @@ static gboolean xw_toplevel_wlroots_get_fullscreen(XwToplevel *self) {
     return XW_TOPLEVEL_WLROOTS(self)->fullscreen;
 }
 
+static gboolean xw_toplevel_wlroots_get_activated(XwToplevel *self) {
+    return XW_TOPLEVEL_WLROOTS(self)->activated;
+}
+
 static void xw_toplevel_wlroots_set_minimized(XwToplevel *self, gboolean minimized) {
     if (minimized)
         zwlr_foreign_toplevel_handle_v1_set_minimized(XW_TOPLEVEL_WLROOTS(self)->toplevel);
@@ -278,6 +301,11 @@ static void xw_toplevel_wlroots_set_fullscreen(XwToplevel *self, gboolean fullsc
         zwlr_foreign_toplevel_handle_v1_set_fullscreen(XW_TOPLEVEL_WLROOTS(self)->toplevel, NULL);
     else
         zwlr_foreign_toplevel_handle_v1_unset_fullscreen(XW_TOPLEVEL_WLROOTS(self)->toplevel);
+}
+
+static void xw_toplevel_wlroots_activate(XwToplevel *self) {
+    struct wl_seat *seat = gdk_wayland_seat_get_wl_seat(gdk_display_get_default_seat(gdk_display_get_default()));
+    zwlr_foreign_toplevel_handle_v1_activate(XW_TOPLEVEL_WLROOTS(self)->toplevel, seat);
 }
 
 static void xw_toplevel_wlroots_close(XwToplevel *self) {

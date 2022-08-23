@@ -34,6 +34,7 @@ static void xw_toplevel_default_init(XwToplevelInterface *iface) {
     g_object_interface_install_property(iface, g_param_spec_boolean("minimized", "Minimized", "Minimized", FALSE, G_PARAM_READWRITE));
     g_object_interface_install_property(iface, g_param_spec_boolean("maximized", "Maximized", "Maximized", FALSE, G_PARAM_READWRITE));
     g_object_interface_install_property(iface, g_param_spec_boolean("fullscreen", "Fullscreen", "Fullscreen", FALSE, G_PARAM_READWRITE));
+    g_object_interface_install_property(iface, g_param_spec_boolean("activated", "Activated", "Activated", FALSE, G_PARAM_READWRITE));
 
     toplevel_signals[DESTROY] = g_signal_new("destroy", G_TYPE_FROM_INTERFACE(iface), G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET(XwToplevelInterface, destroy), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
@@ -78,6 +79,14 @@ gboolean xw_toplevel_get_fullscreen(XwToplevel *self) {
     return iface->get_fullscreen(self);
 }
 
+gboolean xw_toplevel_get_activated(XwToplevel *self) {
+    g_return_if_fail(XW_IS_TOPLEVEL(self));
+
+    XwToplevelInterface *iface = XW_TOPLEVEL_GET_IFACE(self);
+    g_return_if_fail(iface->get_activated != NULL);
+    return iface->get_activated(self);
+}
+
 void xw_toplevel_set_minimized(XwToplevel *self, gboolean minimized) {
     g_return_if_fail(XW_IS_TOPLEVEL(self));
 
@@ -100,6 +109,14 @@ void xw_toplevel_set_fullscreen(XwToplevel *self, gboolean fullscreen) {
     XwToplevelInterface *iface = XW_TOPLEVEL_GET_IFACE(self);
     g_return_if_fail(iface->set_fullscreen != NULL);
     iface->set_fullscreen(self, fullscreen);
+}
+
+void xw_toplevel_activate(XwToplevel *self) {
+    g_return_if_fail(XW_IS_TOPLEVEL(self));
+
+    XwToplevelInterface *iface = XW_TOPLEVEL_GET_IFACE(self);
+    g_return_if_fail(iface->activate != NULL);
+    iface->activate(self);
 }
 
 void xw_toplevel_close(XwToplevel *self) {
