@@ -37,12 +37,20 @@ static void notify_maximized_event(XwToplevel *toplevel, GParamSpec *pspec, GtkB
     gtk_button_set_label(button, xw_toplevel_get_maximized(toplevel) ? "Unmaximize" : "Maximize");
 }
 
+static void notify_fullscreen_event(XwToplevel *toplevel, GParamSpec *pspec, GtkButton *button) {
+    gtk_button_set_label(button, xw_toplevel_get_fullscreen(toplevel) ? "Unfullscreen" : "Fullscreen");
+}
+
 static void minimize_clicked_event(GtkButton *button, XwToplevel *toplevel) {
     xw_toplevel_set_minimized(toplevel, !xw_toplevel_get_minimized(toplevel));
 }
 
 static void maximize_clicked_event(GtkButton *button, XwToplevel *toplevel) {
     xw_toplevel_set_maximized(toplevel, !xw_toplevel_get_maximized(toplevel));
+}
+
+static void fullscreen_clicked_event(GtkButton *button, XwToplevel *toplevel) {
+    xw_toplevel_set_fullscreen(toplevel, !xw_toplevel_get_fullscreen(toplevel));
 }
 
 static void close_clicked_event(GtkButton *button, XwToplevel *toplevel) {
@@ -64,6 +72,10 @@ static void new_toplevel_event(XwToplevels *xw_toplevels, XwToplevel *toplevel) 
     g_signal_connect(maximize_button, "clicked", G_CALLBACK(maximize_clicked_event), toplevel);
     gtk_container_add(GTK_CONTAINER(hbox), maximize_button);
 
+    GtkWidget *fullscreen_button = gtk_button_new_with_label(xw_toplevel_get_fullscreen(toplevel) ? "Unfullscreen" : "Fullscreen");
+    g_signal_connect(fullscreen_button, "clicked", G_CALLBACK(fullscreen_clicked_event), toplevel);
+    gtk_container_add(GTK_CONTAINER(hbox), fullscreen_button);
+
     GtkWidget *close_button = gtk_button_new_with_label("Close");
     g_signal_connect(close_button, "clicked", G_CALLBACK(close_clicked_event), toplevel);
     gtk_container_add(GTK_CONTAINER(hbox), close_button);
@@ -78,6 +90,7 @@ static void new_toplevel_event(XwToplevels *xw_toplevels, XwToplevel *toplevel) 
     g_signal_connect(toplevel, "notify::title", G_CALLBACK(notify_title_event), label);
     g_signal_connect(toplevel, "notify::minimized", G_CALLBACK(notify_minimized_event), minimize_button);
     g_signal_connect(toplevel, "notify::maximized", G_CALLBACK(notify_maximized_event), maximize_button);
+    g_signal_connect(toplevel, "notify::fullscreen", G_CALLBACK(notify_fullscreen_event), fullscreen_button);
 
     g_signal_connect(toplevel, "destroy", G_CALLBACK(destroy_event), hbox);
 }
@@ -107,6 +120,10 @@ static void activate(GtkApplication *app, gpointer user_data) {
             g_signal_connect(maximize_button, "clicked", G_CALLBACK(maximize_clicked_event), data);
             gtk_container_add(GTK_CONTAINER(hbox), maximize_button);
 
+            GtkWidget *fullscreen_button = gtk_button_new_with_label(xw_toplevel_get_fullscreen(data) ? "Unfullscreen" : "Fullscreen");
+            g_signal_connect(fullscreen_button, "clicked", G_CALLBACK(fullscreen_clicked_event), data);
+            gtk_container_add(GTK_CONTAINER(hbox), fullscreen_button);
+
             GtkWidget *close_button = gtk_button_new_with_label("Close");
             g_signal_connect(close_button, "clicked", G_CALLBACK(close_clicked_event), data);
             gtk_container_add(GTK_CONTAINER(hbox), close_button);
@@ -119,6 +136,7 @@ static void activate(GtkApplication *app, gpointer user_data) {
             g_signal_connect(data, "notify::title", G_CALLBACK(notify_title_event), label);
             g_signal_connect(data, "notify::minimized", G_CALLBACK(notify_minimized_event), minimize_button);
             g_signal_connect(data, "notify::maximized", G_CALLBACK(notify_maximized_event), maximize_button);
+            g_signal_connect(data, "notify::fullscreen", G_CALLBACK(notify_fullscreen_event), fullscreen_button);
 
             g_signal_connect(data, "destroy", G_CALLBACK(destroy_event), hbox);
         }

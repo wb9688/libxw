@@ -37,9 +37,11 @@ struct _XwToplevelInterface {
     gchar *(*get_app_id)(XwToplevel *self);
     gboolean (*get_minimized)(XwToplevel *self);
     gboolean (*get_maximized)(XwToplevel *self);
+    gboolean (*get_fullscreen)(XwToplevel *self);
 
     void (*set_minimized)(XwToplevel *self, gboolean minimized);
     void (*set_maximized)(XwToplevel *self, gboolean maximized);
+    void (*set_fullscreen)(XwToplevel *self, gboolean fullscreen);
     void (*close)(XwToplevel *self);
 };
 
@@ -47,9 +49,11 @@ gchar *xw_toplevel_get_title(XwToplevel *self);
 gchar *xw_toplevel_get_app_id(XwToplevel *self);
 gboolean xw_toplevel_get_minimized(XwToplevel *self);
 gboolean xw_toplevel_get_maximized(XwToplevel *self);
+gboolean xw_toplevel_get_fullscreen(XwToplevel *self);
 
 void xw_toplevel_set_minimized(XwToplevel *self, gboolean minimized);
 void xw_toplevel_set_maximized(XwToplevel *self, gboolean maximized);
+void xw_toplevel_set_fullscreen(XwToplevel *self, gboolean fullscreen);
 void xw_toplevel_close(XwToplevel *self);
 
 G_END_DECLS
